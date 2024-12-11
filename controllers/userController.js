@@ -1,3 +1,5 @@
+// controllers/userController.js
+
 const jwt = require("jsonwebtoken");
 const pool = require("../config/postgresClient");
 require("dotenv").config();
@@ -39,10 +41,15 @@ const loginUser = async (req, res) => {
         expiresIn: "1h",
       });
 
-      // Devolver el token al cliente
+      // Devolver el token y los datos del usuario
       return res.json({
         message: "Login exitoso",
         token: token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
       });
     } else {
       return res.status(401).json({ message: "Contraseña incorrecta" });

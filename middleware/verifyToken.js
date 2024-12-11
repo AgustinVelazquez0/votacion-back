@@ -18,18 +18,16 @@ const verifyToken = (req, res, next) => {
 
   // Verificamos si el token está bien formado
   if (!tokenPart) {
-    return res
-      .status(400)
-      .json({
-        message: "Token mal formado. Asegúrate de usar 'Bearer <token>'.",
-      });
+    return res.status(400).json({
+      message: "Token mal formado. Asegúrate de usar 'Bearer <token>'.",
+    });
   }
 
   console.log("Token después de separar 'Bearer':", tokenPart); // Verifica el valor del token
 
   try {
     // Verifica y decodifica el token usando la clave secreta
-    const decoded = jwt.verify(tokenPart, "your-secret-key"); // Asegúrate de que la clave secreta sea la misma que usas en el login
+    const decoded = jwt.verify(tokenPart, process.env.JWT_SECRET); // Usa la clave secreta almacenada en .env
     req.user = decoded; // Guardamos la información del usuario decodificada en `req.user`
     next(); // Continuamos con la siguiente función (ruta)
   } catch (error) {

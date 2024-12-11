@@ -1,32 +1,23 @@
+// routes/userRoutes.js
+
 const express = require("express");
 const { loginUser, registerUser } = require("../controllers/userController");
-const verifyToken = require("../middleware/verifyToken"); // Usamos verifyToken aquí
+const authenticateToken = require("../middleware/verifyToken");
 
 const router = express.Router();
 
-// Ruta para el login
-router.post(
-  "/login",
-  (req, res, next) => {
-    console.log("Solicitud POST a /login recibida");
-    next(); // Llamamos al siguiente middleware
-  },
-  loginUser
-);
+// Ruta POST para login
+router.post("/login", loginUser);
 
 // Ruta para registrar un nuevo usuario
-router.post("/register", (req, res) => {
-  console.log("Ruta POST /register alcanzada");
-  registerUser(req, res);
-});
+router.post("/register", registerUser);
 
 // Ruta para obtener la información del usuario autenticado
-router.get("/me", verifyToken, (req, res) => {
-  // Aquí usamos verifyToken
+router.get("/me", authenticateToken, (req, res) => {
   res.json({
     id: req.user.id,
     email: req.user.email,
-    username: req.user.username,
+    name: req.user.name,
   });
 });
 
