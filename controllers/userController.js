@@ -1,6 +1,5 @@
-// controllers/userController.js
-
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt"); // Importar bcrypt
 const pool = require("../config/postgresClient");
 require("dotenv").config();
 
@@ -27,33 +26,34 @@ const loginUser = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Validar la contraseña
-    if (user.password === password) {
-      // Crear el payload para el token
-      const payload = {
+    // Comparar contraseñas usando bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Contraseña incorrecta" });
+    }
+
+    // Crear el payload para el token
+    const payload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
+
+    // Crear el JWT
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    // Devolver el token y los datos del usuario
+    return res.json({
+      message: "Login exitoso",
+      token: token,
+      user: {
         id: user.id,
         name: user.name,
         email: user.email,
-      };
-
-      // Crear el JWT
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-
-      // Devolver el token y los datos del usuario
-      return res.json({
-        message: "Login exitoso",
-        token: token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        },
-      });
-    } else {
-      return res.status(401).json({ message: "Contraseña incorrecta" });
-    }
+      },
+    });
   } catch (error) {
     console.error("Error al consultar PostgreSQL:", error);
     return res.status(500).json({ message: "Error del servidor" });
@@ -83,10 +83,14 @@ const registerUser = async (req, res) => {
         .json({ message: "El correo electrónico ya está registrado" });
     }
 
-    // Insertar el nuevo usuario
+    // Hashear la contraseña con bcrypt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insertar el nuevo usuario con la contraseña hasheada
     const result = await pool.query(
       "INSERT INTO users (name, document, email, password, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING *",
-      [name, document, email, password]
+      [name, document, email, hashedPassword]
     );
 
     const newUser = result.rows[0];
