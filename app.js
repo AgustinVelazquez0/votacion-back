@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 5000; // Usar variable de entorno para el puerto
 
 // Middleware
-app.use(cors({ origin: "http://localhost:5173" })); // Permitir solicitudes desde el cliente
+app.use(cors({ origin: process.env.CLIENT_URL })); // Permitir solicitudes desde el cliente
 app.use(express.json()); // Middleware para manejar JSON
 
 // Agregar log para verificar que las rutas están siendo alcanzadas
@@ -35,7 +35,7 @@ pool.query("SELECT NOW()", (err, res) => {
 
 // Conexión a MongoDB
 mongoose
-  .connect(process.env.MONGO_URI || "mongodb://127.0.0.1:27017/todoDB") // Usar variable de entorno para MongoDB
+  .connect(process.env.MONGO_URI) // Usar variable de entorno para MongoDB
   .then(() => console.log("Conexión a MongoDB exitosa"))
   .catch((err) => console.error("Error conectando a MongoDB:", err));
 
