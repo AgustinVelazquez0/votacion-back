@@ -27,9 +27,9 @@ git clone git@github.com:AgustinVelazquez0/Todo_List_Back.git
 
 #### 2. **Levantar los Contenedores de Bases de Datos:**:
 
-Para **PostgreSQL:** Abre Docker Desktop y busca el contenedor de PostgreSQL. Asegúrate de que el contenedor esté en ejecución en el puerto 5432
+Para **PostgreSQL:** Abre Docker Desktop y busca el contenedor de PostgreSQL. Asegúrate de que el contenedor esté en ejecución en el puerto 5432.
 
-Para **MongoDB:** Abre MongoDB Compass o Docker Desktop y busca el contenedor de MongoDB. Asegúrate de que el contenedor esté en ejecución en el puerto 27017
+Para **MongoDB:** Abre MongoDB Compass o Docker Desktop y busca el contenedor de MongoDB. Asegúrate de que el contenedor esté en ejecución en el puerto 27017.
 
 #### 3. **Instalar Dependencias del Backend:**
 
