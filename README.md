@@ -50,6 +50,10 @@ node app.js
 
 El servidor debería estar corriendo en `http://localhost:5000`.
 
+## Front-End con React
+
+Además, he desarrollado un front-end para este proyecto utilizando React, el cual se encuentra en un repositorio separado y público. Este front-end permite navegar e interactuar con la web, Puedes explorar ese repositorio en el siguiente enlace: `https://github.com/AgustinVelazquez0/Todo_List_Front`
+
 ### Estructura del Proyecto
 
 - **`models/`**: Modelos para MongoDB (tareas) y PostgreSQL (usuarios).
