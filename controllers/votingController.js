@@ -135,36 +135,43 @@ const getElection = async (req, res) => {
 // Obtener resultados
 const getResults = async (req, res) => {
   try {
-    const candidates = await Candidate.find().sort({ votes: -1 });
-    const activeElection = await Election.findOne({ isActive: true });
+    // 1. Traer todos los candidatos sin votos
+    const candidates = await Candidate.find().lean();
 
-    const totalVotes = await Vote.countDocuments(); // Cantidad real de votos (número entero)
-    const totalUsers = await User.countDocuments();
+    // 2. Hacer un aggregation para contar los votos por candidateId
+    const votes = await Vote.aggregate([
+      { $group: { _id: "$candidateId", totalVotes: { $sum: 1 } } },
+    ]);
 
-    // Si no hay usuarios o votos, participación es 0
-    const participation =
-      totalUsers > 0 && totalVotes > 0
-        ? ((totalVotes / totalUsers) * 100).toFixed(2)
-        : "0";
-
-    const results = {
-      candidates: candidates.map((candidate) => ({
+    // 3. Mapear los votos al array de candidatos
+    const enrichedCandidates = candidates.map((candidate) => {
+      const voteEntry = votes.find(
+        (v) => String(v._id) === String(candidate._id)
+      );
+      return {
         id: candidate._id,
         name: candidate.name,
         party: candidate.party,
-        votes: candidate.votes,
-        percentage:
-          totalVotes > 0
-            ? ((candidate.votes / totalVotes) * 100).toFixed(2)
-            : "0",
-      })),
-      totalVotes: totalVotes || 0, // Siempre devolver número, no undefined ni null
-      participation: `${participation}%`,
-      totalUsers: totalUsers || 0,
-      election: activeElection,
-    };
+        votes: voteEntry ? voteEntry.totalVotes : 0,
+      };
+    });
 
-    res.json(results);
+    // 4. Obtener estadísticas globales
+    const totalVotes = await Vote.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const participation =
+      totalUsers > 0 ? ((totalVotes / totalUsers) * 100).toFixed(2) : "0";
+
+    const activeElection = await Election.findOne({ isActive: true });
+
+    // 5. Responder con estructura limpia
+    res.json({
+      candidates: enrichedCandidates.sort((a, b) => b.votes - a.votes),
+      totalVotes,
+      totalUsers,
+      participation: `${participation}%`,
+      election: activeElection,
+    });
   } catch (error) {
     res
       .status(500)
