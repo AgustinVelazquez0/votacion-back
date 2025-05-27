@@ -1,40 +1,62 @@
 const jwt = require("jsonwebtoken");
 
+const JWT_SECRET =
+  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
 const verifyToken = (req, res, next) => {
-  // Obtenemos el token desde el encabezado "Authorization"
-  const token = req.header("Authorization");
-
-  console.log("Token recibido:", token); // Verifica lo que se recibe en el encabezado
-
-  // Si no se proporciona token, respondemos con un error 401
-  if (!token) {
-    return res
-      .status(401)
-      .json({ message: "Acceso denegado. No se proporcionó token." });
-  }
-
-  // El formato esperado es 'Bearer <token>', separamos el "Bearer" y obtenemos solo el token
-  const tokenPart = token.split(" ")[1];
-
-  // Verificamos si el token está bien formado
-  if (!tokenPart) {
-    return res.status(400).json({
-      message: "Token mal formado. Asegúrate de usar 'Bearer <token>'.",
-    });
-  }
-
-  console.log("Token después de separar 'Bearer':", tokenPart); // Verifica el valor del token
-
   try {
-    // Verifica y decodifica el token usando la clave secreta
-    const decoded = jwt.verify(tokenPart, process.env.JWT_SECRET); // Usa la clave secreta almacenada en .env
-    req.user = decoded; // Guardamos la información del usuario decodificada en `req.user`
-    next(); // Continuamos con la siguiente función (ruta)
+    // Obtener token del header Authorization
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({
+        message: "Token de acceso requerido",
+      });
+    }
+
+    // El token debe venir en formato "Bearer TOKEN"
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : authHeader;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "Token de acceso requerido",
+      });
+    }
+
+    // Verificar y decodificar el token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Agregar información del usuario al request
+    req.user = {
+      userId: decoded.userId,
+      dni: decoded.dni,
+      email: decoded.email,
+      role: decoded.role || "voter",
+    };
+
+    console.log("✅ Token verificado para usuario:", decoded.dni);
+
+    next();
   } catch (error) {
-    console.error("Error al verificar el token:", error.message);
-    return res
-      .status(403)
-      .json({ message: "Token inválido o expirado", error: error.message });
+    console.error("❌ Error verificando token:", error.message);
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        message: "Token inválido",
+      });
+    }
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Token expirado",
+      });
+    }
+
+    return res.status(401).json({
+      message: "Error de autenticación",
+    });
   }
 };
 
