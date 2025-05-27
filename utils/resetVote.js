@@ -44,4 +44,4 @@ const resetUserVote = async (userEmail) => {
 };
 
 // Usar: node utils/resetVote.js
-resetUserVote("jj@jj.com");
+resetUserVote("pepe@pepe.com");
